@@ -9,7 +9,7 @@ SubSing t = (a : t) -> (b : t) -> a = b
 
 export
 total ssEither : SubSing l -> SubSing r -> (l -> r -> Void) ->
-                      SubSing (Either l r)
+                 SubSing (Either l r)
 ssEither lf rf cf (Left a) (Left b) = cong (lf a b)
 ssEither lf rf cf (Left a) (Right b) = void (cf a b)
 ssEither lf rf cf (Right a) (Left b) = void (cf b a)
@@ -46,3 +46,7 @@ total ssDP : {v : k -> Type} -> SubSing k ->
              ((a : k) -> SubSing (v a)) -> SubSing (a : k ** v a)
 ssDP lf rf (al ** ar) (bl ** br) with (lf al bl)
   ssDP lf rf (bl ** ar) (bl ** br) | Refl = cong (rf bl ar br)
+
+export
+total ssEql : (a : t) -> (b : s) -> SubSing (a = b)
+ssEql a a Refl Refl = Refl

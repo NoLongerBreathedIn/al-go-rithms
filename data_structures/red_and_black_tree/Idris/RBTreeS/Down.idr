@@ -596,31 +596,31 @@ public export
 total zipRb : ZipDownS cc pc h d k o cb pl pr v -> Bnds k
 
 public export
-total sreeLc : RBTreeS c h k o b v -> Either (IsTrue c) (IsPos h) -> Bool
+total sreeLc : RBTreeS c h k o b v -> Bool
 public export
-total treeLb : RBTreeS c h k o b v -> Either (IsTrue c) (IsPos h) -> Bnds k
+total treeLb : RBTreeS c h k o b v -> Bnds k
 public export
-total sreeRc : RBTreeS c h k o b v -> Either (IsTrue c) (IsPos h) -> Bool
+total sreeRc : RBTreeS c h k o b v -> Bool
 public export
-total treeRb : RBTreeS c h k o b v -> Either (IsTrue c) (IsPos h) -> Bnds k
+total treeRb : RBTreeS c h k o b v -> Bnds k
 
-sreeLc LifS = either void void
-sreeLc (RedS x m y z w) = const False
-sreeLc (BlkS {lc} x m y z w) = const lc
-treeLb LifS = either void void
-treeLb (RedS {lb} x m y z w) = const lb
-treeLb (BlkS {lb} x m y z w) = const lb
-sreeRc LifS = either void void
-sreeRc (RedS x m y z w) = const False
-sreeRc (BlkS {rc} x m y z w) = const rc
-treeRb LifS = either void void
-treeRb (RedS {rb} x m y z w) = const rb
-treeRb (BlkS {rb} x m y z w) = const rb
+sreeLc LifS = False
+sreeLc (RedS x m y z w) = False
+sreeLc (BlkS {lc} x m y z w) = lc
+treeLb LifS = Nothing
+treeLb (RedS {lb} x m y z w) = lb
+treeLb (BlkS {lb} x m y z w) = lb
+sreeRc LifS = False
+sreeRc (RedS x m y z w) = False
+sreeRc (BlkS {rc} x m y z w) = rc
+treeRb LifS = Nothing
+treeRb (RedS {rb} x m y z w) = rb
+treeRb (BlkS {rb} x m y z w) = rb
 
-sipLc x = sreeLc (child (zipDS x)) (fst (canDS x))
-zipLb x = treeLb (child (zipDS x)) (fst (canDS x))
-sipRc x = sreeRc (child (zipDS x)) (fst (canDS x))
-zipRb x = treeRb (child (zipDS x)) (fst (canDS x))
+sipLc x = sreeLc (child (zipDS x))
+zipLb x = treeLb (child (zipDS x))
+sipRc x = sreeRc (child (zipDS x))
+zipRb x = treeRb (child (zipDS x))
 
 public export
 total goLeftS : TotalOrd k o -> (z : ZipDownS tc pc h d k o tb pl pr v) ->
@@ -1136,19 +1136,17 @@ mutual
     (MkZipSearchS (MkRBZipS LifS c g) j q) = 
       MkZipFoundS False pc Z d Nothing pl pr 
                   (MkZipSearchS (MkRBZipS LifS c g) j q) ()
-  searchSF {o} pc (S h) d (boundStuff lb m rb) pl pr to a (MkZipSearchS (MkRBZipS (BlkS l m w r g) c p) j q) with (MkZipDownS (MkRBZipS (BlkS l m w r g) c p) ?vvv)
-    | z with (enh o a m)
-      | LTE x = searchSI to a (MkZipSearchS (goLeftS to z) (Right ()) ?uuu)
-      | EQE x = MkZipFoundS False pc (S h) d (boundStuff lb m rb) pl pr
-                            (MkZipSearchS (MkRBZipS (BlkS l m w r g) c p) j q) ?iii
-      | GTE x = searchSI to a (MkZipSearchS (goRightS to z) (Right ()) ?ooo)
+  searchSF {o} pc (S h) d (boundStuff lb m rb) pl pr to a (MkZipSearchS (MkRBZipS (BlkS l m w r g) c p) j q) with (enh o a m)
+    | LTE x = searchSI to a (MkZipSearchS (goLeftS to (MkZipDownS (MkRBZipS (BlkS l m w r g) c p) (Right (), j))) (Right ()) (fst q, x))
+    | EQE x = MkZipFoundS False pc (S h) d (boundStuff lb m rb) pl pr
+                          (MkZipSearchS (MkRBZipS (BlkS l m w r g) c p) j q) x
+    | GTE x = searchSI to a (MkZipSearchS (goRightS to (MkZipDownS (MkRBZipS (BlkS l m w r g) c p) (Right (), j))) (Right ()) (x, snd q))
 
-  searchST {o} pc h d (boundStuff lb m rb) pl pr to a (MkZipSearchS (MkRBZipS (RedS l m w r g) c p) j q) with (MkZipDownS (MkRBZipS (RedS l m w r g) c p) ?xxx)
-    | z with (enh o a m)
-      | LTE x = searchSJ to a (MkZipSearchS (goLeftS to z) (Left ()) ?rrr)
-      | EQE x = MkZipFoundS True pc h d (boundStuff lb m rb) pl pr
-                            (MkZipSearchS (MkRBZipS (RedS l m w r g) c p) j q) ?ttt
-      | GTE x = searchSJ to a (MkZipSearchS (goRightS to (MkZipDownS (MkRBZipS (RedS l m w r g) c p) ?ccc)) (Left ()) ?yyy)
+  searchST {o} pc h d (boundStuff lb m rb) pl pr to a (MkZipSearchS (MkRBZipS (RedS l m w r g) c p) j q) with (enh o a m)
+    | LTE x = searchSJ to a (MkZipSearchS (goLeftS to (MkZipDownS (MkRBZipS (RedS l m w r g) c p) (Left (), j))) (Left ()) (fst q, x))
+    | EQE x = MkZipFoundS True pc h d (boundStuff lb m rb) pl pr
+                          (MkZipSearchS (MkRBZipS (RedS l m w r g) c p) j q) x
+    | GTE x = searchSJ to a (MkZipSearchS (goRightS to (MkZipDownS (MkRBZipS (RedS l m w r g) c p) (Left (), j))) (Left ()) (x, snd q))
 
   searchSI {cc=True} {pc} {h} {d} {cb} {pl} {pr} to a z =
     searchST pc h d cb pl pr to a z
@@ -1158,7 +1156,7 @@ mutual
   searchSJ {pc} {h} {d} {cb} {pl} {pr} to a z =
     searchSF pc h d cb pl pr to a z
 
-searchS = searchSI
+--searchS = searchSI
 
 {-BEG_MAP
 END_MAP-}
