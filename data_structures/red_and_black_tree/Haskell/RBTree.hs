@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module RBMap (isCorrect, RBMap, empty, modifyLookup) where
+module RBMap (isCorrect, RBMap, empty, modifyLookup, assnList) where
 
 import Data.Function (on)
 import Data.Maybe
@@ -27,6 +27,7 @@ instance Functor (RBMap a) where
 isCorrect :: RBMap k v -> Bool
 empty :: Comp k -> RBMap k v
 modifyLookup :: k -> (Maybe v -> Maybe v) -> RBMap k v -> (RBMap k v, Maybe v)
+assnList :: RBMap k v -> [(k, v)]
 
 empty = flip RBMap Leaf
 
@@ -156,6 +157,10 @@ deleteFixup c@(_, (Crumb _ d _ (Node _ _ (Node lnc _ _ _) (Node rnc _ _ _))):_)
 checkBalance :: RBTree a -> Maybe Int
 checkNoRR :: Bool -> RBTree a -> Bool
 checkOrder :: Comp a -> RBTree a -> Maybe (Maybe (a, a))
+
+assnList (RBMap _ t) = assnList' t [] where
+  assnList' Leaf = id
+  assnList' (Node _ o l r) = assnList' l . (o:) . assnList' r
 
 isCorrect (RBMap f t) =
   isJust (checkBalance t) &&
