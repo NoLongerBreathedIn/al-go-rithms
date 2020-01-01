@@ -1,7 +1,7 @@
-module RBTreeS
+module RBTreeS.LookS -- 'S' due to idris bug #3539
 
 -- A slow implementation of RBTrees (slow because it carries proofs)
--- (c) Eyal Minsky-Fenick/NoLongerBreathedIn 2019 CC-BY
+-- (c) Eyal Minsky-Fenick/NoLongerBreathedIn 2019-2020 CC-BY
 
 import TotalOrd
 import SubSing
@@ -1245,3 +1245,7 @@ removeEmptyS a o t = ?remEmp
 -}
 END_PF-}
 END_THM-}
+
+-- Local Variables:
+-- idris-interpreter-flags: ("-i" "..")
+-- End:

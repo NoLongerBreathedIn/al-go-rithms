@@ -1,7 +1,7 @@
 module SubSing
 
 -- Subsingleton stuff for the RBTree implementation
--- (c) Eyal Minsky-Fenick/NoLongerBreathedIn 2019 CC-BY
+-- (c) Eyal Minsky-Fenick/NoLongerBreathedIn 2019-2020 CC-BY
 
 public export
 total SubSing : Type -> Type

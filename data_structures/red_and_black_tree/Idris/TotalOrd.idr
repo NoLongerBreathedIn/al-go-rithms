@@ -1,7 +1,7 @@
 module TotalOrd
 
 -- Ordering stuff for the RBTree implementation
--- (c) Eyal Minsky-Fenick/NoLongerBreathedIn 2019 CC-BY
+-- (c) Eyal Minsky-Fenick/NoLongerBreathedIn 2019-2020 CC-BY
 
 import SubSing
 

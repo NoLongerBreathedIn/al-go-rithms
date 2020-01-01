@@ -1,7 +1,7 @@
 module TotalOrdDO
 
 -- Useful implementation of TotalOrd
--- (c) Eyal Minsky-Fenick/NoLongerBreathedIn 2019 CC-BY
+-- (c) Eyal Minsky-Fenick/NoLongerBreathedIn 2019-2020 CC-BY
 
 import Decidable.Equality
 -- requires contrib

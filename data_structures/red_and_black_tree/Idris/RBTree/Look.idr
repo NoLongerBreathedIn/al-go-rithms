@@ -1,7 +1,7 @@
 module RBTree
 
 -- A faster implementation of RBTrees (no proofs)
--- (c) Eyal Minsky-Fenick/NoLongerBreathedIn 2019 CC-BY
+-- (c) Eyal Minsky-Fenick/NoLongerBreathedIn 2019-2020 CC-BY
 
 import TotalOrd
 import SubSing
@@ -555,3 +555,7 @@ removeEmpty a o t = ?remEmp
 -}
 {-END_PF-}
 {-END_THM-}
+
+-- Local Variables:
+-- idris-interpreter-flags: ("-i" "..")
+-- End:
