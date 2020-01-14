@@ -36,16 +36,16 @@ Comp a = a -> a -> Ordering
 
 public export
 data EOrd : Ordering -> Type where
-  LTE : IsLT x -> EOrd x
-  EQE : IsEQ x -> EOrd x
-  GTE : IsGT x -> EOrd x
+  ELT : IsLT x -> EOrd x
+  EEQ : IsEQ x -> EOrd x
+  EGT : IsGT x -> EOrd x
 
 export
 total enh : (o : Comp a) -> (l : a) -> (r : a) -> EOrd (o l r)
 enh o l r with (o l r)
-  enh o l r | LT = LTE ()
-  enh o l r | EQ = EQE ()
-  enh o l r | GT = GTE ()
+  enh o l r | LT = ELT ()
+  enh o l r | EQ = EEQ ()
+  enh o l r | GT = EGT ()
 
 %default total
 public export

@@ -165,9 +165,9 @@ mutual
 
 {-BEG_DIMP-}
   pickTree o to a l m w r with (enh o a m)
-    | LTE x = lookTree o to a l
-    | EQE x = Just (replace (corff to x) w)
-    | GTE x = lookTree o to a r
+    | ELT x = lookTree o to a l
+    | EEQ x = Just (replace (corff to x) w)
+    | EGT x = lookTree o to a r
 
   lookTree o to a Lif = Nothing
   lookTree o to a (Red l m w r) = pickTree o to a l m w r
@@ -462,9 +462,9 @@ mutual
                         pickTreeS o to a l m w r
 
   cleanPickTree o to a l m w r with (enh o a m)
-    cleanPickTree o to a l m w r | LTE x = cleanLookTree o to a l
-    cleanPickTree o to a l m w r | EQE x = Refl
-    cleanPickTree o to a l m w r | GTE x = cleanLookTree o to a r
+    cleanPickTree o to a l m w r | ELT x = cleanLookTree o to a l
+    cleanPickTree o to a l m w r | EEQ x = Refl
+    cleanPickTree o to a l m w r | EGT x = cleanLookTree o to a r
   
   cleanLookTree o to a LifS = Refl
   cleanLookTree o to a (RedS l m w r p) = cleanPickTree o to a l m w r
@@ -512,10 +512,10 @@ mutual
                    map (f a) (pickTree o to a l m w r)
 
   pickTmap o to a f l m w r with (enh o a m)
-    | LTE x = lookTmap o to a f l
-    | EQE x with (corf to x)
-      pickTmap o to a f l a w r | EQE x | Refl = Refl
-    | GTE x = lookTmap o to a f r
+    | ELT x = lookTmap o to a f l
+    | EEQ x with (corf to x)
+      pickTmap o to a f l a w r | EEQ x | Refl = Refl
+    | EGT x = lookTmap o to a f r
 
   lookTmap o to a f Lif = Refl
   lookTmap o to a f (Red l m w r) = pickTmap o to a f l m w r

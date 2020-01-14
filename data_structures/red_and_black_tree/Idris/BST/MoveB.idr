@@ -5,8 +5,7 @@ module BST.MoveB -- 'B' due to idris bug #3539
 
 import SubSing
 import TotalOrd
-import BST.LookB
-import BST.StructsB
+import public BST.LookB
 
 total iLG : IsLT o -> IsGT o -> a
 iLG {o} l g = void (incompLG o l g)
@@ -64,51 +63,51 @@ moveLeft {o} {to} {a} {l} {m} {w} {r} {p} {g0} {q0} {g1} {q1} =
 
 mL {pl=Nothing} o to a l m w r p g0 q0 g1 q1 = mL0 o to a l m w r p g0 q0 g1 q1
 mL {pl=Just pl} o to a l m w r p g0 q0 g1 q1 with (enh o a pl)
-  | LTE x = mL1 o to a m w r p (Left x) g1
-  | EQE x = mL1 o to a m w r p (Right x) g1
-  | GTE x = mL0 o to a l m w r p g0 q0 g1 q1
+  | ELT x = mL1 o to a m w r p (Left x) g1
+  | EEQ x = mL1 o to a m w r p (Right x) g1
+  | EGT x = mL0 o to a l m w r p g0 q0 g1 q1
 
 mL0 {pr=Nothing} o to a l m w r p g0 q0 g1 q1 = mL3 o to a l m w r p () g1 q1
 mL0 {pr=Just pr} o to a l m w r p g0 q0 g1 q1 with (enh o a pr)
-  | LTE x = mL3 o to a l m w r p x g1 q1
-  | EQE x = mL2 o to a l m w r p (Left x) g1 q1
-  | GTE x = mL2 o to a l m w r p (Right x) g1 q1
+  | ELT x = mL3 o to a l m w r p x g1 q1
+  | EEQ x = mL2 o to a l m w r p (Left x) g1 q1
+  | EGT x = mL2 o to a l m w r p (Right x) g1 q1
 
 mL1 o to a m w r p g q with (tranQL to g (fst (fst (snd q))))
   | x with (enh o a m)
-    | LTE y = Refl
-    | EQE y = iLE x y
-    | GTE y = iLG x y
+    | ELT y = Refl
+    | EEQ y = iLE x y
+    | EGT y = iLG x y
 
 mL2 {pr} o to a l m w r p j g1 q1 with (tranQG to j (flipLT to
                                                          (fst (snd (snd g1)))))
   | x with (enh o a m)
-    | LTE y = iLG y x
-    | EQE y = iEG y x
-    | GTE y with (enh o a m)
-      | LTE z = iLG z x
-      | EQE z = iEG z x
-      | GTE z with (enh o a pr)
-        | LTE s = iLQ s j
-        | EQE s = Refl
-        | GTE s = Refl
+    | ELT y = iLG y x
+    | EEQ y = iEG y x
+    | EGT y with (enh o a m)
+      | ELT z = iLG z x
+      | EEQ z = iEG z x
+      | EGT z with (enh o a pr)
+        | ELT s = iLQ s j
+        | EEQ s = Refl
+        | EGT s = Refl
 
 mL3 {pr} o to a l m w r p j g1 q1 with (enh o a m)
-  | LTE x = Refl
-  | EQE x with (enh o a m)
-    | LTE y = iLE y x
-    | EQE y with (ssIsEQ (o a m) x y)
-      mL3 o to a l m w r p j g1 q1 | EQE x | EQE x | Refl = Refl
-    | GTE y = iEG x y
-  | GTE x with (enh o a m)
-    | LTE y = iLG y x
-    | EQE y = iEG y x
-    mL3 {pr=Nothing} o to a l m w r p j g1 q1 | GTE x | GTE y = Refl
+  | ELT x = Refl
+  | EEQ x with (enh o a m)
+    | ELT y = iLE y x
+    | EEQ y with (ssIsEQ (o a m) x y)
+      mL3 o to a l m w r p j g1 q1 | EEQ x | EEQ x | Refl = Refl
+    | EGT y = iEG x y
+  | EGT x with (enh o a m)
+    | ELT y = iLG y x
+    | EEQ y = iEG y x
+    mL3 {pr=Nothing} o to a l m w r p j g1 q1 | EGT x | EGT y = Refl
     mL3 {pr=Just pr} o to a l m w r p j g1 q1 
-      | GTE x | GTE y with (enh o a pr)
-        | LTE z = Refl
-        | EQE z = iLE j z
-        | GTE z = iLG j z
+      | EGT x | EGT y with (enh o a pr)
+        | ELT z = Refl
+        | EEQ z = iLE j z
+        | EGT z = iLG j z
 
 total mR : (o : Comp k) -> (to : TotalOrd k o) -> (a : k) ->
            (l : BST k o lb v) -> (m : k) -> (w : v m) -> (r : BST k o rb v) ->
@@ -162,86 +161,86 @@ total mR7 : (o : Comp k) -> (to : TotalOrd k o) -> (a : k) ->
             lookC o to a p = lookZ o to a (MkBSZ r (Rgt l m w p g1) q1)
 
 mR {pl=Nothing} o to a l m w r p g0 q0 g1 q1 with (enh o a m)
-  | LTE x with (enh o a m)
-    | LTE y = mR1 o to a l m w r p x g1
-    | EQE y = iLE x y
-    | GTE y = iLG x y
-  | EQE x with (enh o a m)
-    | LTE y = iLE y x
-    | EQE y = mR2 o to a l m w r p y g0 q0 g1
-    | GTE y = iEG x y
-  | GTE x = mR0 o to a l m w r p x g0 g1
+  | ELT x with (enh o a m)
+    | ELT y = mR1 o to a l m w r p x g1
+    | EEQ y = iLE x y
+    | EGT y = iLG x y
+  | EEQ x with (enh o a m)
+    | ELT y = iLE y x
+    | EEQ y = mR2 o to a l m w r p y g0 q0 g1
+    | EGT y = iEG x y
+  | EGT x = mR0 o to a l m w r p x g0 g1
 mR {pl=Just pl} o to a l m w r p g0 q0 g1 q1 with (enh o a pl)
-  | LTE x = mR7 o to a l m w r p (Left x) g1 q1
-  | EQE x = mR7 o to a l m w r p (Right x) g1 q1
-  | GTE x with (enh o a m)
-    | LTE y with (enh o a m)
-      | LTE z with (enh o a pl)
-        | LTE s = iLG s x
-        | EQE s = iEG s x
-        | GTE s = mR1 o to a l m w r p y g1
-      | EQE z = iLE y z
-      | GTE z = iLG y z
-    | EQE y with (enh o a m)
-      | LTE z = iLE z y
-      | EQE z = mR2 o to a l m w r p z g0 q0 g1
-      | GTE z = iEG y z
-    | GTE y = mR0 o to a l m w r p y g0 g1
+  | ELT x = mR7 o to a l m w r p (Left x) g1 q1
+  | EEQ x = mR7 o to a l m w r p (Right x) g1 q1
+  | EGT x with (enh o a m)
+    | ELT y with (enh o a m)
+      | ELT z with (enh o a pl)
+        | ELT s = iLG s x
+        | EEQ s = iEG s x
+        | EGT s = mR1 o to a l m w r p y g1
+      | EEQ z = iLE y z
+      | EGT z = iLG y z
+    | EEQ y with (enh o a m)
+      | ELT z = iLE z y
+      | EEQ z = mR2 o to a l m w r p z g0 q0 g1
+      | EGT z = iEG y z
+    | EGT y = mR0 o to a l m w r p y g0 g1
 
 mR0 {pr=Nothing} o to a l m w r p j g0 g1 = mR3 o to a l m w r g0 j
 mR0 {pr=Just pr} o to a l m w r p j g0 g1 with (enh o a pr)
-  | LTE x = mR3 o to a l m w r g0 j
-  | EQE x = mR4 o to a l m w p g1 (Left x)
-  | GTE x = mR4 o to a l m w p g1 (Right x)
+  | ELT x = mR3 o to a l m w r g0 j
+  | EEQ x = mR4 o to a l m w p g1 (Left x)
+  | EGT x = mR4 o to a l m w p g1 (Right x)
 
 mR1 {pr=Nothing} o to a l m w r p j g1 = mR5 o to a l m w r j
 mR1 {pr=Just pr} o to a l m w r p j g1 with (tran to j (fst (snd (snd g1))))
   | x with (enh o a pr)
-    | LTE y = mR5 o to a l m w r j
-    | EQE y = iLE x y
-    | GTE y = iLG x y
+    | ELT y = mR5 o to a l m w r j
+    | EEQ y = iLE x y
+    | EGT y = iLG x y
 
 mR2 {pr=Nothing} o to a l m w r p j g0 q0 g1 = mR6 o to a l m w r j
 mR2 {pr=Just pr} o to a l m w r p j g0 q0 g1 with (tranQL to (Right j)
                                                           (fst (snd (snd g1))))
   | x with (enh o a pr)
-    | LTE y = mR6 o to a l m w r j
-    | EQE y = iLE x y
-    | GTE y = iLG x y
+    | ELT y = mR6 o to a l m w r j
+    | EEQ y = iLE x y
+    | EGT y = iLG x y
 
 mR3 o to a l m w r g0 j with (enh o a m)
-  | LTE x = iLG x j
-  | EQE x = iEG x j
-  | GTE x = Refl
+  | ELT x = iLG x j
+  | EEQ x = iEG x j
+  | EGT x = Refl
 
 mR4 o to a l m w p g1 j with (tranQG to j (flipLT to (fst (snd (snd g1)))))
   | x with (enh o a m)
-    | LTE y = iLG y x 
-    | EQE y = iEG y x
-    | GTE y = Refl
+    | ELT y = iLG y x 
+    | EEQ y = iEG y x
+    | EGT y = Refl
 
 mR5 o to a l m w r j with (enh o a m)
-  | LTE x = Refl
-  | EQE x = iLE j x
-  | GTE x = iLG j x
+  | ELT x = Refl
+  | EEQ x = iLE j x
+  | EGT x = iLG j x
 
 mR6 o to a l m w r j with (enh o a m)
-  | LTE x = iLE x j
-  | EQE x with (ssIsEQ (o a m) x j)
-    mR6 o to a l m w r j | EQE j | Refl = Refl
-  | GTE x = iEG j x
+  | ELT x = iLE x j
+  | EEQ x with (ssIsEQ (o a m) x j)
+    mR6 o to a l m w r j | EEQ j | Refl = Refl
+  | EGT x = iEG j x
 
 mR7 {pl} o to a l m w r p j g1 q1 with (tranQL to j (fst (fst (snd g1))))
   | x with (enh o a m)
-    | LTE y with (enh o a m)
-      | LTE z with (enh o a pl)
-        | LTE s = Refl
-        | EQE s = Refl
-        | GTE s = iQG j s
-      | EQE z = iLE y z
-      | GTE z = iLG y z
-    | EQE y = iLE x y
-    | GTE y = iLG x y
+    | ELT y with (enh o a m)
+      | ELT z with (enh o a pl)
+        | ELT s = Refl
+        | EEQ s = Refl
+        | EGT s = iQG j s
+      | EEQ z = iLE y z
+      | EGT z = iLG y z
+    | EEQ y = iLE x y
+    | EGT y = iLG x y
 
 export
 total moveRight : lookZ o to a (MkBSZ (Node l m w r g0) p q0) =

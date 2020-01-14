@@ -7,6 +7,9 @@ module RBTreeS.StructsS -- 'S' due to idris bug #3539
 import TotalOrd
 import SubSing
 import BST.StructsB
+import public BST.TypesB
+import RBTreeS.SizeUp
+import RBTreeS.Types
 
 public export
 data RBTreeS : Bool -> Nat -> (k : Type) ->
@@ -20,10 +23,53 @@ data RBTreeS : Bool -> Nat -> (k : Type) ->
          RBTreeS False (S n) k o (boundStuff lb m rb) v
 
 public export
+total sreeLc : RBTreeS c h k o b v -> Bool
+public export
+total treeLb : RBTreeS c h k o b v -> Bnds k
+public export
+total sreeRc : RBTreeS c h k o b v -> Bool
+public export
+total treeRb : RBTreeS c h k o b v -> Bnds k
+
+sreeLc LifS = False
+sreeLc (RedS x m y z w) = False
+sreeLc (BlkS {lc} x m y z w) = lc
+treeLb LifS = Nothing
+treeLb (RedS {lb} x m y z w) = lb
+treeLb (BlkS {lb} x m y z w) = lb
+sreeRc LifS = False
+sreeRc (RedS x m y z w) = False
+sreeRc (BlkS {rc} x m y z w) = rc
+treeRb LifS = Nothing
+treeRb (RedS {rb} x m y z w) = rb
+treeRb (BlkS {rb} x m y z w) = rb
+
+public export
 total sreeK : RBTreeS c h k o b v -> Maybe k
 sreeK LifS = Nothing
 sreeK (RedS l m w r p) = Just m
 sreeK (BlkS l m w r p) = Just m
+
+public export
+total sreeKD : (t : RBTreeS c h k o b v) -> IsFull (sreeK t) ->
+               Either (IsTrue c) (IsPos h)
+sreeKD LifS = Left
+sreeKD (RedS l m w r p) = Left
+sreeKD (BlkS l m w r p) = Right
+
+public export
+total sreeLDH : (t : RBTreeS c h k o b v) -> (xx : IsFull (sreeK t)) ->
+                sizeUp (sreeLc t) (predH c h) `LT` sizeUp c h
+public export
+total sreeRDH : (t : RBTreeS c h k o b v) -> (xx : IsFull (sreeK t)) ->
+                sizeUp (sreeRc t) (predH c h) `LT` sizeUp c h
+
+sreeLDH LifS xx = void xx
+sreeLDH (RedS l m w r p) xx = sultCol _
+sreeLDH (BlkS l m w r p) xx = sultNum Z _ False _
+sreeRDH LifS xx = void xx
+sreeRDH (RedS l m w r p) xx = sultCol _
+sreeRDH (BlkS l m w r p) xx = sultNum Z _ False _
 
 export
 total rwRedS : {l : RBTreeS False h k o lb v} ->
@@ -40,9 +86,8 @@ total rwBlkS : {l : RBTreeS lc h k o lb v} -> {l' : RBTreeS lc h k o lb v} ->
                {r : RBTreeS rc h k o rb v} -> {r' : RBTreeS rc h k o rb v} ->
                {p : IsGood o lb m rb} -> {p' : IsGood o lb m rb} ->
                l = l' -> r = r' -> BlkS l m w r p = BlkS l' m w r' p'
-rwBlkS {o} {lb} {m} {rb} {p} {p'} j k = ?zzz
- {-with (ssIsGood o lb m rb p p')
-  rwBlkS Refl Refl | Refl = Refl-}
+rwBlkS {o} {lb} {m} {rb} {p} {p'} j k with (ssIsGood o lb m rb p p')
+  rwBlkS Refl Refl | Refl = Refl
 
 public export
 total trB : RBTreeS c n k o b v -> Bnds k
@@ -125,37 +170,6 @@ stripC (BlkLS m w r p q) = Lft m w (stripT r) (stripC p) q
 stripC (BlkRS l m w p q) = Rgt (stripT l) m w (stripC p) q
 
 public export
-total IsTrue : Bool -> Type
-IsTrue True = ()
-IsTrue False = Void
-
-public export
-total IsFalse : Bool -> Type
-IsFalse True = Void
-IsFalse False = ()
-
-public export
-total IsPos : Nat -> Type
-IsPos Z = Void
-IsPos (S _) = ()
-
-public export
-total IsZero : Nat -> Type
-IsZero Z = ()
-IsZero (S _) = ()
-
-public export
-total predH : (b : Bool) -> (n : Nat) -> Either (IsTrue b) (IsPos n) -> Nat
-predH True n x = n
-predH False (S k) x = k
-predH False Z pf = either void void pf
-
-public export
-total succHD : Bool -> Nat -> Nat
-succHD True = id
-succHD False = S
-
-public export
 total crL : RBCrumbS c h d k o pl pr v -> Maybe k
 crL {pl} c = pl
 public export
@@ -170,6 +184,8 @@ public export
 total crPr : RBCrumbS c h (S d) k o pl pr v -> Maybe k
 public export
 total crPc : RBCrumbS c h (S d) k o pl pr v -> Bool
+public export
+total srK : RBCrumbS c h d k o pl pr v -> Maybe k
 
 crPl (RedLS _ _ _ p _) = crL p
 crPl (RedRS _ _ _ p _) = crL p
@@ -183,6 +199,22 @@ crPc (RedLS _ _ _ p _) = crC p
 crPc (RedRS _ _ _ p _) = crC p
 crPc (BlkLS _ _ _ p _) = crC p
 crPc (BlkRS _ _ _ p _) = crC p
+srK (RedLS m _ _ _ _) = Just m
+srK (BlkLS m _ _ _ _) = Just m
+srK (RedRS _ m _ _ _) = Just m
+srK (BlkRS _ m _ _ _) = Just m
+srK RootS = Nothing
+
+public export
+total srKU : (cr : RBCrumbS c h d k o pl pr v) -> IsFull (srK cr) ->
+             IsPos d
+srKU RootS = id
+srKU (RedLS _ _ _ (BlkLS _ _ _ _ _) _) = id
+srKU (RedLS _ _ _ (BlkRS _ _ _ _ _) _) = id
+srKU (RedRS _ _ _ (BlkLS _ _ _ _ _) _) = id
+srKU (RedRS _ _ _ (BlkRS _ _ _ _ _) _) = id
+srKU (BlkLS _ _ _ _ _) = id
+srKU (BlkRS _ _ _ _ _) = id
 
 public export
 record RBZipS (cc : Bool) (pc : Bool) (ch : Nat) (ph : Nat) (pd : Nat)
@@ -215,6 +247,50 @@ public export
 total stripZ : RBZipS cc pc ch ph pd k o cb pl pr v ->
                BSZ k o cb pl pr v
 stripZ (MkRBZipS t c p) = MkBSZ (stripT t) (stripC c) p
+
+public export
+total sipLc : RBZipS cc pc ch ph pd k o cb pl pr v -> Bool
+public export
+total zipLb : RBZipS cc pc ch ph pd k o cb pl pr v -> Bnds k
+public export
+total sipRc : RBZipS cc pc ch ph pd k o cb pl pr v -> Bool
+public export
+total zipRb : RBZipS cc pc ch ph pd k o cb pl pr v -> Bnds k
+
+sipLc = sreeLc . child
+zipLb = treeLb . child
+sipRc = sreeRc . child
+zipRb = treeRb . child
+
+public export
+total sipK : RBZipS cc pc ch ph pd k o cb pl pr v -> Maybe k
+sipK = sreeK . child
+
+public export
+total sipKD : (z : RBZipS cc pc ch ph pd k o cb pl pr v) -> IsFull (sipK z) ->
+              Either (IsTrue cc) (IsPos ch)
+sipKD (MkRBZipS t _ _) = sreeKD t
+
+public export
+total sipLDH : (z : RBZipS cc pc ch ph pd k o cb pl pr v) ->
+               (xx : IsFull (sipK z)) ->
+               sizeUp (sipLc z) (predH cc ch) `LT` sizeUp cc ch
+sipLDH (MkRBZipS t _ _) = sreeLDH t
+
+public export
+total sipRDH : (z : RBZipS cc pc ch ph pd k o cb pl pr v) ->
+               (xx : IsFull (sipK z)) ->
+               sizeUp (sipRc z) (predH cc ch) `LT` sizeUp cc ch
+sipRDH (MkRBZipS t _ _) = sreeRDH t
+
+public export
+total sipJ : RBZipS cc pc ch ph pd k o cb pl pr v -> Maybe k
+sipJ = srK . parnt
+
+public export
+total sipJU : (z : RBZipS cc pc ch ph pd k o cb pl pr v) -> IsFull (sipJ z) ->
+              IsPos pd
+sipJU (MkRBZipS _ p _) = srKU p
 
 export
 total pfOrdered : TotalOrd k o -> RBTreeS c h k o b v -> OrderedBounds o b

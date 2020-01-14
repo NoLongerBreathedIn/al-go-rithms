@@ -5,7 +5,7 @@ module BST.LookB -- 'B' due to idris bug #3539
 
 import SubSing
 import TotalOrd
-import BST.StructsB
+import public BST.StructsB
 
 mutual
   public export
@@ -17,9 +17,9 @@ mutual
                 Maybe (v a)
 
   pickT o to a l m w r with (enh o a m)
-    | LTE x = lookT o to a l
-    | EQE x = Just (replace (corff to x) w)
-    | GTE x = lookT o to a r
+    | ELT x = lookT o to a l
+    | EEQ x = Just (replace (corff to x) w)
+    | EGT x = lookT o to a r
 
   lookT o to a Leaf = Nothing
   lookT o to a (Node l m w r p) = pickT o to a l m w r
@@ -38,22 +38,22 @@ mutual
                  BSC k o pl pr v -> Maybe (v a)
 
   pickCL {pr} o to a m w c p with (enh o a m)
-    | LTE x = lookC o to a p
-    | EQE x = Just (replace (corff to x) w)
-    pickCL {pr=Nothing} o to a m w c p | GTE x = lookT o to a c
-    pickCL {pr=Just r} o to a m w c p | GTE x with (enh o a r)
-      | LTE y = lookT o to a c
-      | EQE y = lookC o to a p
-      | GTE y = lookC o to a p
+    | ELT x = lookC o to a p
+    | EEQ x = Just (replace (corff to x) w)
+    pickCL {pr=Nothing} o to a m w c p | EGT x = lookT o to a c
+    pickCL {pr=Just r} o to a m w c p | EGT x with (enh o a r)
+      | ELT y = lookT o to a c
+      | EEQ y = lookC o to a p
+      | EGT y = lookC o to a p
 
   pickCR {pl} o to a c m w p with (enh o a m)
-    pickCR {pl=Nothing} o to a c m w p | LTE x = lookT o to a c
-    pickCR {pl=Just l} o to a c m w p | LTE x with (enh o a l)
-      | LTE y = lookC o to a p
-      | EQE y = lookC o to a p
-      | GTE y = lookT o to a c
-    | EQE x = (Just (replace (corff to x) w))
-    | GTE x = lookC o to a p
+    pickCR {pl=Nothing} o to a c m w p | ELT x = lookT o to a c
+    pickCR {pl=Just l} o to a c m w p | ELT x with (enh o a l)
+      | ELT y = lookC o to a p
+      | EEQ y = lookC o to a p
+      | EGT y = lookT o to a c
+    | EEQ x = (Just (replace (corff to x) w))
+    | EGT x = lookC o to a p
 
   lookC o to a Rut = Nothing
   lookC o to a (Lft m w r c p) = pickCL o to a m w r c
@@ -68,15 +68,15 @@ total lookZ' : (o : Comp k) -> TotalOrd k o -> (a : k) ->
 
 lookZ' {pr=Nothing} o to a z = lookT o to a (cld z)
 lookZ' {pr=Just r} o to a z with (enh o a r)
-  | LTE x = lookT o to a (cld z)
-  | EQE x = lookC o to a (pnt z)
-  | GTE x = lookC o to a (pnt z)
+  | ELT x = lookT o to a (cld z)
+  | EEQ x = lookC o to a (pnt z)
+  | EGT x = lookC o to a (pnt z)
 
 lookZ {pl=Nothing} o to a z = lookZ' o to a z
 lookZ {pl=Just l} o to a z with (enh o a l)
-  | LTE x = lookC o to a (pnt z)
-  | EQE x = lookC o to a (pnt z)
-  | GTE x = lookZ' o to a z
+  | ELT x = lookC o to a (pnt z)
+  | EEQ x = lookC o to a (pnt z)
+  | EGT x = lookZ' o to a z
 
 -- Local Variables:
 -- idris-interpreter-flags: ("-i" "..")

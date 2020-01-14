@@ -173,9 +173,9 @@ mutual
 
 {-BEG_DIMP
   pickTreeS o to a l m w r with (enh o a m)
-    | LTE x = lookTreeS o to a l
-    | EQE x = Just (replace (corff to x) w)
-    | GTE x = lookTreeS o to a r
+    | ELT x = lookTreeS o to a l
+    | EEQ x = Just (replace (corff to x) w)
+    | EGT x = lookTreeS o to a r
 
   lookTreeS o to a LifS = Nothing
   lookTreeS o to a (RedS l m w r p) = pickTreeS o to a l m w r
@@ -198,9 +198,9 @@ mutual
 {-BEG_DIMP
 {-BEG_STRIP
   stripPT o to a l m w r with (enh o a m)
-    | LTE x = stripLT o to a l
-    | EQE x = Refl
-    | GTE x = stripLT o to a r
+    | ELT x = stripLT o to a l
+    | EEQ x = Refl
+    | EGT x = stripLT o to a r
   
   stripLT o to a LifS = Refl
   stripLT o to a (RedS l m w r p) = stripPT o to a l m w r
@@ -295,22 +295,22 @@ mutual
 
 {-BEG_DIMP
   pickCrumbL {pr} o to a m w c p with (enh o a m)
-    | LTE x = lookCrumb o to a p
-    | EQE x = Just (replace (corff to x) w)
-    pickCrumbL {pr=Nothing} o to a m w c p | GTE x = lookTreeS o to a c
-    pickCrumbL {pr=Just r} o to a m w c p | GTE x with (enh o a r)
-      | LTE y = lookTreeS o to a c
-      | EQE y = lookCrumb o to a p
-      | GTE y = lookCrumb o to a p
+    | ELT x = lookCrumb o to a p
+    | EEQ x = Just (replace (corff to x) w)
+    pickCrumbL {pr=Nothing} o to a m w c p | EGT x = lookTreeS o to a c
+    pickCrumbL {pr=Just r} o to a m w c p | EGT x with (enh o a r)
+      | ELT y = lookTreeS o to a c
+      | EEQ y = lookCrumb o to a p
+      | EGT y = lookCrumb o to a p
 
   pickCrumbR {pl} o to a c m w p with (enh o a m)
-    pickCrumbR {pl=Nothing} o to a c m w p | LTE x = lookTreeS o to a c
-    pickCrumbR {pl=Just l} o to a c m w p | LTE x with (enh o a l)
-      | LTE y = lookCrumb o to a p
-      | EQE y = lookCrumb o to a p
-      | GTE y = lookTreeS o to a c
-    | EQE x = (Just (replace (corff to x) w))
-    | GTE x = lookCrumb o to a p
+    pickCrumbR {pl=Nothing} o to a c m w p | ELT x = lookTreeS o to a c
+    pickCrumbR {pl=Just l} o to a c m w p | ELT x with (enh o a l)
+      | ELT y = lookCrumb o to a p
+      | EEQ y = lookCrumb o to a p
+      | EGT y = lookTreeS o to a c
+    | EEQ x = (Just (replace (corff to x) w))
+    | EGT x = lookCrumb o to a p
 
   lookCrumb o to a RootS = Nothing
   lookCrumb o to a (RedLS m w r c p) = pickCrumbL o to a m w r c
@@ -340,22 +340,22 @@ mutual
 {-BEG_DIMP
 {-BEG_STRIP
   stripCL {pr} o to a m w c p with (enh o a m)
-    | LTE x = stripLC o to a p
-    | EQE x = Refl
-    stripCL {pr=Nothing} o to a m w c p | GTE x = stripLT o to a c
-    stripCL {pr=Just r} o to a m w c p | GTE x with (enh o a r)
-      | LTE y = stripLT o to a c
-      | EQE y = stripLC o to a p
-      | GTE y = stripLC o to a p
+    | ELT x = stripLC o to a p
+    | EEQ x = Refl
+    stripCL {pr=Nothing} o to a m w c p | EGT x = stripLT o to a c
+    stripCL {pr=Just r} o to a m w c p | EGT x with (enh o a r)
+      | ELT y = stripLT o to a c
+      | EEQ y = stripLC o to a p
+      | EGT y = stripLC o to a p
 
   stripCR {pl} o to a c m w p with (enh o a m)
-    stripCR {pl=Nothing} o to a c m w p | LTE x = stripLT o to a c
-    stripCR {pl=Just l} o to a c m w p | LTE x with (enh o a l)
-      | LTE y = stripLC o to a p
-      | EQE y = stripLC o to a p
-      | GTE y = stripLT o to a c
-    | EQE x = Refl
-    | GTE x = stripLC o to a p
+    stripCR {pl=Nothing} o to a c m w p | ELT x = stripLT o to a c
+    stripCR {pl=Just l} o to a c m w p | ELT x with (enh o a l)
+      | ELT y = stripLC o to a p
+      | EEQ y = stripLC o to a p
+      | EGT y = stripLT o to a c
+    | EEQ x = Refl
+    | EGT x = stripLC o to a p
   
   stripLC o to a RootS = Refl
   stripLC o to a (RedLS m w r p q) = stripCL o to a m w r p
@@ -474,15 +474,15 @@ total zipUpLook : (o : Comp k) -> (to : TotalOrd k o) -> (a : k) ->
 {-BEG_DIMP
 lookZip' {pr=Nothing} o to a z = lookTreeS o to a (child z)
 lookZip' {pr=Just r} o to a z with (enh o a r)
-  | LTE x = lookTreeS o to a (child z)
-  | EQE x = lookCrumb o to a (parnt z)
-  | GTE x = lookCrumb o to a (parnt z)
+  | ELT x = lookTreeS o to a (child z)
+  | EEQ x = lookCrumb o to a (parnt z)
+  | EGT x = lookCrumb o to a (parnt z)
 
 lookZip {pl=Nothing} o to a z = lookZip' o to a z
 lookZip {pl=Just l} o to a z with (enh o a l)
-  | LTE x = lookCrumb o to a (parnt z)
-  | EQE x = lookCrumb o to a (parnt z)
-  | GTE x = lookZip' o to a z
+  | ELT x = lookCrumb o to a (parnt z)
+  | EEQ x = lookCrumb o to a (parnt z)
+  | EGT x = lookZip' o to a z
 
 zipUpLook {b=Nothing} o to a t = Refl
 zipUpLook {b=Just (l,r)} o to a t = Refl
@@ -501,15 +501,15 @@ total stripLZ' : (o : Comp k) -> (to : TotalOrd k o) -> (a : k) ->
 {-BEG_STRIP
 stripLZ' {pr=Nothing} o to a (MkRBZipS cl pn pf) = stripLT o to a cl
 stripLZ' {pr=Just r} o to a (MkRBZipS cl pn pf) with (enh o a r)
-  | LTE x = stripLT o to a cl
-  | EQE x = stripLC o to a pn
-  | GTE x = stripLC o to a pn
+  | ELT x = stripLT o to a cl
+  | EEQ x = stripLC o to a pn
+  | EGT x = stripLC o to a pn
 
 stripLZ {pl=Nothing} o to a z = stripLZ' o to a z
 stripLZ {pl=Just l} o to a z with (enh o a l)
-  stripLZ o to a (MkRBZipS cl pn pf) | LTE x = stripLC o to a pn
-  stripLZ o to a (MkRBZipS cl pn pf) | EQE x = stripLC o to a pn
-  | GTE x = stripLZ' o to a z
+  stripLZ o to a (MkRBZipS cl pn pf) | ELT x = stripLC o to a pn
+  stripLZ o to a (MkRBZipS cl pn pf) | EEQ x = stripLC o to a pn
+  | EGT x = stripLZ' o to a z
 END_STRIP-}
 END_DIMP-}
 
@@ -1137,16 +1137,16 @@ mutual
       MkZipFoundS False pc Z d Nothing pl pr 
                   (MkZipSearchS (MkRBZipS LifS c g) j q) ()
   searchSF {o} pc (S h) d (boundStuff lb m rb) pl pr to a (MkZipSearchS (MkRBZipS (BlkS l m w r g) c p) j q) with (enh o a m)
-    | LTE x = searchSI to a (MkZipSearchS (goLeftS to (MkZipDownS (MkRBZipS (BlkS l m w r g) c p) (Right (), j))) (Right ()) (fst q, x))
-    | EQE x = MkZipFoundS False pc (S h) d (boundStuff lb m rb) pl pr
+    | ELT x = searchSI to a (MkZipSearchS (goLeftS to (MkZipDownS (MkRBZipS (BlkS l m w r g) c p) (Right (), j))) (Right ()) (fst q, x))
+    | EEQ x = MkZipFoundS False pc (S h) d (boundStuff lb m rb) pl pr
                           (MkZipSearchS (MkRBZipS (BlkS l m w r g) c p) j q) x
-    | GTE x = searchSI to a (MkZipSearchS (goRightS to (MkZipDownS (MkRBZipS (BlkS l m w r g) c p) (Right (), j))) (Right ()) (x, snd q))
+    | EGT x = searchSI to a (MkZipSearchS (goRightS to (MkZipDownS (MkRBZipS (BlkS l m w r g) c p) (Right (), j))) (Right ()) (x, snd q))
 
   searchST {o} pc h d (boundStuff lb m rb) pl pr to a (MkZipSearchS (MkRBZipS (RedS l m w r g) c p) j q) with (enh o a m)
-    | LTE x = searchSJ to a (MkZipSearchS (goLeftS to (MkZipDownS (MkRBZipS (RedS l m w r g) c p) (Left (), j))) (Left ()) (fst q, x))
-    | EQE x = MkZipFoundS True pc h d (boundStuff lb m rb) pl pr
+    | ELT x = searchSJ to a (MkZipSearchS (goLeftS to (MkZipDownS (MkRBZipS (RedS l m w r g) c p) (Left (), j))) (Left ()) (fst q, x))
+    | EEQ x = MkZipFoundS True pc h d (boundStuff lb m rb) pl pr
                           (MkZipSearchS (MkRBZipS (RedS l m w r g) c p) j q) x
-    | GTE x = searchSJ to a (MkZipSearchS (goRightS to (MkZipDownS (MkRBZipS (RedS l m w r g) c p) (Left (), j))) (Left ()) (x, snd q))
+    | EGT x = searchSJ to a (MkZipSearchS (goRightS to (MkZipDownS (MkRBZipS (RedS l m w r g) c p) (Left (), j))) (Left ()) (x, snd q))
 
   searchSI {cc=True} {pc} {h} {d} {cb} {pl} {pr} to a z =
     searchST pc h d cb pl pr to a z
@@ -1202,10 +1202,10 @@ mutual
                     map (f a) (pickTreeS o to a l m w r)
 
   pickTmapS o to a f l m w r with (enh o a m)
-    | LTE x = lookTmapS o to a f l
-    | EQE x with (corff to x)
-      pickTmapS o to m f l m w r | EQE x | Refl = Refl
-    | GTE x = lookTmapS o to a f r
+    | ELT x = lookTmapS o to a f l
+    | EEQ x with (corff to x)
+      pickTmapS o to m f l m w r | EEQ x | Refl = Refl
+    | EGT x = lookTmapS o to a f r
 
   lookTmapS o to a f LifS = Refl
   lookTmapS o to a f (RedS l m w r p) = pickTmapS o to a f l m w r
