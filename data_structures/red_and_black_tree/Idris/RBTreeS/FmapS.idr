@@ -88,6 +88,35 @@ total mapZipRb : {v' : k -> Type} -> (f : (a : k) -> v a -> v' a) ->
                  (z : RBZipS cc pc ch ph pd k o cb pl pr v) ->
                  zipRb (zmapS f z) = zipRb z
 
+export
+total mapSrPc : {v' : k -> Type} -> (f : (a : k) -> v a -> v' a) ->
+               (cr : RBCrumbS c h (S d) k o pl pr v) ->
+               srPc (cmapS f cr) = srPc cr
+export
+total mapSipPc : {v' : k -> Type} -> (f : (a : k) -> v a -> v' a) ->
+                 (z : RBZipS cc pc ch ph (S pd) k o cb pl pr v) ->
+                 sipPc (zmapS f z) = sipPc z
+export
+total mapCrPl : {v' : k -> Type} -> (f : (a : k) -> v a -> v' a) ->
+                (cr : RBCrumbS c h (S d) k o pl pr v) ->
+                crPl (cmapS f cr) = crPl cr
+export
+total mapZipPl : {v' : k -> Type} -> (f : (a : k) -> v a -> v' a) ->
+                 (z : RBZipS cc pc ch ph (S pd) k o cb pl pr v) ->
+                 zipPl (zmapS f z) = zipPl z
+export
+total mapCrPr : {v' : k -> Type} -> (f : (a : k) -> v a -> v' a) ->
+                (cr : RBCrumbS c h (S d) k o pl pr v) ->
+                crPr (cmapS f cr) = crPr cr
+export
+total mapZipPr : {v' : k -> Type} -> (f : (a : k) -> v a -> v' a) ->
+                 (z : RBZipS cc pc ch ph (S pd) k o cb pl pr v) ->
+                 zipPr (zmapS f z) = zipPr z
+export
+total mapZipPb : {v' : k -> Type} -> (f : (a : k) -> v a -> v' a) ->
+                 (z : RBZipS cc pc ch ph (S pd) k o cb pl pr v) ->
+                 zipPb (zmapS f z) = zipPb z
+
 -- Implementation
 
 tmapS f LifS = LifS
@@ -140,6 +169,25 @@ mapTreeRb f LifS = Refl
 mapTreeRb f (RedS l m w r p) = Refl
 mapTreeRb f (BlkS l m w r p) = Refl
 mapZipRb f (MkRBZipS c p q) = mapTreeRb f c
+mapSrPc f (RedLS m w r p g) = Refl
+mapSrPc f (RedRS l m w p g) = Refl
+mapSrPc f (BlkLS m w r p g) = Refl
+mapSrPc f (BlkRS l m w p g) = Refl
+mapSipPc f (MkRBZipS c p q) = mapSrPc f p
+mapCrPl f (RedLS m w r p g) = Refl
+mapCrPl f (RedRS l m w p g) = Refl
+mapCrPl f (BlkLS m w r p g) = Refl
+mapCrPl f (BlkRS l m w p g) = Refl
+mapZipPl f (MkRBZipS c p q) = mapCrPl f p
+mapCrPr f (RedLS m w r p g) = Refl
+mapCrPr f (RedRS l m w p g) = Refl
+mapCrPr f (BlkLS m w r p g) = Refl
+mapCrPr f (BlkRS l m w p g) = Refl
+mapZipPr f (MkRBZipS c p q) = mapCrPr f p
+mapZipPb f (MkRBZipS c (RedLS m w r p g) q) = Refl
+mapZipPb f (MkRBZipS c (RedRS l m w p g) q) = Refl
+mapZipPb f (MkRBZipS c (BlkLS m w r p g) q) = Refl
+mapZipPb f (MkRBZipS c (BlkRS l m w p g) q) = Refl
 
 -- Local Variables:
 -- idris-interpreter-flags: ("-i" "..")

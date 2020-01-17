@@ -183,7 +183,7 @@ total crPl : RBCrumbS c h (S d) k o pl pr v -> Maybe k
 public export
 total crPr : RBCrumbS c h (S d) k o pl pr v -> Maybe k
 public export
-total crPc : RBCrumbS c h (S d) k o pl pr v -> Bool
+total srPc : RBCrumbS c h (S d) k o pl pr v -> Bool
 public export
 total srK : RBCrumbS c h d k o pl pr v -> Maybe k
 
@@ -195,10 +195,10 @@ crPr (RedLS _ _ _ p _) = crR p
 crPr (RedRS _ _ _ p _) = crR p
 crPr (BlkLS _ _ _ p _) = crR p
 crPr (BlkRS _ _ _ p _) = crR p
-crPc (RedLS _ _ _ p _) = crC p
-crPc (RedRS _ _ _ p _) = crC p
-crPc (BlkLS _ _ _ p _) = crC p
-crPc (BlkRS _ _ _ p _) = crC p
+srPc (RedLS _ _ _ p _) = crC p
+srPc (RedRS _ _ _ p _) = crC p
+srPc (BlkLS _ _ _ p _) = crC p
+srPc (BlkRS _ _ _ p _) = crC p
 srK (RedLS m _ _ _ _) = Just m
 srK (BlkLS m _ _ _ _) = Just m
 srK (RedRS _ m _ _ _) = Just m
@@ -291,6 +291,26 @@ public export
 total sipJU : (z : RBZipS cc pc ch ph pd k o cb pl pr v) -> IsFull (sipJ z) ->
               IsPos pd
 sipJU (MkRBZipS _ p _) = srKU p
+
+public export
+total sipPc : RBZipS cc pc ch ph (S pd) k o cb pl pr v -> Bool
+sipPc = srPc . parnt
+
+public export
+total zipPl : RBZipS cc pc ch ph (S pd) k o cb pl pr v -> Maybe k
+zipPl = crPl . parnt
+
+public export
+total zipPr : RBZipS cc pc ch ph (S pd) k o cb pl pr v -> Maybe k
+zipPr = crPr . parnt
+
+public export
+total zipPb : RBZipS cc pc ch ph (S pd) k o cb pl pr v -> Bnds k
+zipPb {cb} z with (parnt z)
+  | RedLS {rb} m _ _ _ _ = boundStuff cb m rb
+  | BlkLS {rb} m _ _ _ _ = boundStuff cb m rb
+  | RedRS {lb} _ m _ _ _ = boundStuff lb m cb
+  | BlkRS {lb} _ m _ _ _ = boundStuff lb m cb
 
 export
 total pfOrdered : TotalOrd k o -> RBTreeS c h k o b v -> OrderedBounds o b

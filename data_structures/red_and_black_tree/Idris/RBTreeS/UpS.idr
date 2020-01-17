@@ -10,6 +10,7 @@ import public RBTreeS.StructsS
 import RBTreeS.FmapS
 import RBTreeS.LookS
 import BST.MoveB
+import public RBTreeS.Types
 
 public export
 record ZipUpS (cc : Bool) (pc : Bool) (h : Nat) (d : Nat)
@@ -20,24 +21,6 @@ record ZipUpS (cc : Bool) (pc : Bool) (h : Nat) (d : Nat)
   canUS : Either (IsFalse cc) (IsFalse pc)
 
 public export
-total zipPb : ZipUpS cc pc h d k o cb pl pr v -> Bnds k
-public export
-total zipPl : ZipUpS cc pc h d k o cb pl pr v -> Maybe k
-public export
-total zipPr : ZipUpS cc pc h d k o cb pl pr v -> Maybe k
-public export
-total sipPc : ZipUpS cc tc h d k o cb pl pr v -> Bool
-
-zipPb {cb} z with (parnt (zipUS z))
-  zipPb {cb} z | (RedLS {rb} m w r c p) = boundStuff cb m rb
-  zipPb {cb} z | (RedRS {lb} l m w c p) = boundStuff lb m cb
-  zipPb {cb} z | (BlkLS {rb} m w r c p) = boundStuff cb m rb
-  zipPb {cb} z | (BlkRS {lb} l m w c p) = boundStuff lb m cb
-zipPl = crPl . parnt . zipUS
-zipPr = crPr . parnt . zipUS
-sipPc = crPc . parnt . zipUS
-
-public export
 total zumapS : {v' : k -> Type} -> (f : (a : k) -> v a -> v' a) ->
                ZipUpS cc pc h d k o cb pl pr v ->
                ZipUpS cc pc h d k o cb pl pr v'
@@ -45,8 +28,10 @@ zumapS f (MkZipUpS z c) = MkZipUpS (zmapS f z) c
 
 public export
 total goUpS : TotalOrd k o -> (z : ZipUpS cc tc h d k o cb pl pr v) ->
-              RBZipS tc (sipPc z) (succHD tc h) (succHD tc h)
-                     (succHD (not tc) d) k o (zipPb z) (zipPl z) (zipPr z) v
+              RBZipS tc (sipPc (zipUS z)) (succHD tc h) (succHD tc h)
+                     (succHD (not tc) d) k o (zipPb (zipUS z))
+                                             (zipPl (zipUS z))
+                                             (zipPr (zipUS z)) v
 
 -- Theorems
 

@@ -11,6 +11,8 @@ import public RBTreeS.Types
 import RBTreeS.DownS
 import RBTreeS.SizeUp
 import StepRec
+import RBTreeS.FmapS
+import RBTreeS.LookS
 
 public export
 total IsGoodZipS : Comp k -> k -> Maybe k -> Maybe k -> Type
@@ -56,6 +58,10 @@ total zipUpSearchS : RBTreeS False h k o b v ->
                      ZipSearchS k o v a
 zipUpSearchS {b} {h} t =
   MkZipSearchS False True h Z b Nothing Nothing (zipUpS t) (Left ()) ((), ())
+
+public export
+total zsmapS : {v' : k -> Type} -> ((a : k) -> v a -> v' a) ->
+               ZipSearchS k o v a -> ZipSearchS k o v' a
 
 public export
 total IsGoodZipF : Comp k -> k -> Maybe k -> Maybe k -> Maybe k -> Type
@@ -105,12 +111,37 @@ Sized (ZipSearchS k o v a) where
   size z = ccZSS z `sizeUp` hZSS z
 
 public export
-total searchStepS : (o : Comp k) -> TotalOrd k o -> (a : k) ->
-                    Step (ZipSearchS k o v a) (ZipFoundS k o v a) Smaller
+total zfmapS : {v' : k -> Type} -> ((a : k) -> v a -> v' a) ->
+               ZipFoundS k o v a -> ZipFoundS k o v' a
 
 public export
 total searchS : TotalOrd k o -> (a : k) ->
                 ZipSearchS k o v a -> ZipFoundS k o v a
+
+-- Theorems
+
+export
+total mapSearchS : {v' : k -> Type} -> (to : TotalOrd k o) ->
+                   (f : (a : k) -> v a -> v' a) ->
+                   (z : ZipSearchS k o v a) ->
+                   searchS to a (zsmapS f z) = zfmapS f (searchS to a z)
+
+export
+total lookSearch : (o : Comp k) -> (to : TotalOrd k o) -> (a : k) -> (b : k) ->
+                   (z : ZipSearchS k o v a) ->
+                   lookZip o to b (zipFS (searchS to a z)) =
+                   lookZip o to b (zipZSS z)
+
+-- Implementation
+
+zsmapS f (MkZipSearchS _ _ _ _ _ _ _ z c p) = mkZipSearchS (zmapS f z) c p
+
+zfmapS f (MkZipFoundS _ _ _ _ _ _ _ z c p) =
+  mkZipFoundS (zmapS f z) c (replace (sym (mapSipK f z)) p)
+
+public export
+total searchStepS : (o : Comp k) -> TotalOrd k o -> (a : k) ->
+                    Step (ZipSearchS k o v a) (ZipFoundS k o v a) Smaller
 
 searchStepS o to a (MkZipSearchS _ _ _ _ _ _ _ (MkRBZipS LifS p g) j q) =
   Left (mkZipFoundS (MkRBZipS LifS p g) j q)
@@ -132,6 +163,74 @@ searchStepS o to a (MkZipSearchS _ _ _ _ _ _ _
         sultNum Z _ False _)
 
 searchS {o} to a = sizeStepRec (searchStepS o to a)
+
+-- Proofs
+
+total mapSearchSStep : {v : k -> Type} -> {v' : k -> Type} ->
+                       (to : TotalOrd k o) ->
+                       (f : (a : k) -> v a -> v' a) ->
+                       SizeCommStep (zsmapS f) (zfmapS f)
+                       (searchStepS o to a) (searchStepS o to a)
+                         
+total csZsmapS : {v : k -> Type} -> {v' : k -> Type} ->
+                 (f : (a : k) -> v a -> v' a) ->
+                 CompatSize (zsmapS f)
+csZsmapS f (MkZipSearchS _ _ _ _ _ _ _ z c p) = Refl
+
+mapSearchSStep to f (MkZipSearchS _ _ _ _ _ _ _ (MkRBZipS LifS p g) j q) =
+  cong $ rwZipFoundS Refl Refl
+mapSearchSStep {o} {a} {v'} to f (MkZipSearchS _ _ _ _ _ _ _ (MkRBZipS
+  (RedS l m w r b) p g) j q) with (enh o a m)
+    | ELT x = let mpart = mapLeftS to {v'} f (MkZipDownS 
+                        (MkRBZipS (RedS l m w r b) p g) (Left (), j)) in 
+      cong $ rwZipSearchS mpart Refl
+    | EEQ x = cong $ rwZipFoundS Refl Refl
+    | EGT x = let mpart = mapRightS to {v'} f (MkZipDownS 
+                        (MkRBZipS (RedS l m w r b) p g) (Left (), j)) in
+      cong $ rwZipSearchS mpart Refl
+mapSearchSStep {o} {a} {v'} to f (MkZipSearchS _ _ _ _ _ _ _ (MkRBZipS 
+  (BlkS l m w r b) p g) j q) with (enh o a m)
+    | ELT x = let mpart = mapLeftS to {v'} f (MkZipDownS 
+                        (MkRBZipS (BlkS l m w r b) p g) (Right (), j)) in 
+      cong $ rwZipSearchS mpart Refl
+    | EEQ x = cong $ rwZipFoundS Refl Refl
+    | EGT x = let mpart = mapRightS to {v'} f (MkZipDownS
+                        (MkRBZipS (BlkS l m w r b) p g) (Right (), j)) in
+      cong $ rwZipSearchS mpart Refl
+
+mapSearchS to f = sizeRecComm (csZsmapS f) (mapSearchSStep to f)
+
+total zsl : TotalOrd k o -> (b : k) -> ZipSearchS k o v a -> Maybe (v b)
+total zfl : TotalOrd k o -> (b : k) -> ZipFoundS k o v a -> Maybe (v b)
+
+zsl {o} to b z = lookZip o to b (zipZSS z)
+zfl {o} to b z = lookZip o to b (zipFS z)
+
+total lookSearchStep : (to : TotalOrd k o) -> (a : k) -> (b : k) ->
+                       StepPropEq (Maybe (v b))
+                                  (searchStepS {v} o to a)
+                                  (zsl to b)
+                                  (zfl to b)
+
+lookSearchStep to a b (MkZipSearchS _ _ _ _ _ _ _
+  (MkRBZipS LifS p g) j q) = Refl
+lookSearchStep {o} to a b (MkZipSearchS _ _ _ _ _ _ _
+  (MkRBZipS (RedS l m w r f) p g) j q) with (enh o a m)
+    | ELT x = lookLeft o to b (MkZipDownS
+                (MkRBZipS (RedS l m w r f) p g) (Left (), j))
+    | EEQ x = Refl
+    | EGT x = lookRight o to b (MkZipDownS
+                (MkRBZipS (RedS l m w r f) p g) (Left (), j))
+lookSearchStep {o} to a b (MkZipSearchS _ _ _ _ _ _ _
+  (MkRBZipS (BlkS l m w r f) p g) j q) with (enh o a m)
+    | ELT x = lookLeft o to b (MkZipDownS
+                (MkRBZipS (BlkS l m w r f) p g) (Right (), j))
+    | EEQ x = Refl
+    | EGT x = lookRight o to b (MkZipDownS
+                (MkRBZipS (BlkS l m w r f) p g) (Right (), j))
+
+lookSearch o to a b =
+  sizeStepRecEq (searchStepS o to a) (lookSearchStep to a b)
 
 -- Local Variables:
 -- idris-interpreter-flags: ("-i" "..")
